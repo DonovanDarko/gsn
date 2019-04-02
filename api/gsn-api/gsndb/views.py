@@ -1,3 +1,4 @@
+from django.db.models import Q # Complex lookups with Q objects
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -30,8 +31,30 @@ class SchoolDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class StudentList(generics.ListCreateAPIView):
-    queryset = Student.objects.all()
     serializer_class = StudentSerializer
+	
+    def get_queryset(self):
+        search_term = self.request.query_params.get('search_term')
+        if search_term:
+            queryset = Student.objects.filter(
+            Q(first_name__icontains = search_term) | 
+            Q(last_name__icontains = search_term)  |
+            Q(middle_name__icontains = search_term)
+	    )
+        else:
+            queryset = Student.objects.all()
+        return queryset
+
+"""dont need all objects
+
+queryset = Student.objects.all()
+        search_term = self.request.query_params.get('search_term')
+
+        if search_term:
+            queryset = queryset.filter()
+
+        return queryset
+"""		
 
 class StudentDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.all()
